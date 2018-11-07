@@ -1,5 +1,12 @@
 package cmd
 
+import (
+	"log"
+	"os/exec"
+	"regexp"
+	"strings"
+)
+
 type HostInfoCmdWin struct {}
 
 func (HostInfoCmdWin) retrieveBiosName() string {
@@ -7,7 +14,18 @@ func (HostInfoCmdWin) retrieveBiosName() string {
 }
 
 func (HostInfoCmdWin) retrieveHardwareUUID() string {
-	return ""
+	cmd := exec.Command("wmic", "path", "Win32_ComputerSystemProduct", "get", "uuid")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("cmd.Run() failed with %s\n", err)
+	}
+	result := strings.Split(string(out), "\n")
+	hardwareUUID := ""
+	if len(result) > 1 {
+		re := regexp.MustCompile("\\s|\\r")
+		hardwareUUID = re.ReplaceAllString(result[1], "")
+	}
+	return hardwareUUID
 }
 
 func (HostInfoCmdWin) retrieveOSVersion() string {
