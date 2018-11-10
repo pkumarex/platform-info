@@ -1,4 +1,4 @@
-package cmd
+package platforminfo
 
 type ICommand interface {
 

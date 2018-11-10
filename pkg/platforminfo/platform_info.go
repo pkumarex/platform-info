@@ -1,16 +1,11 @@
-package cmd
+package platforminfo
 
-import (
-	"lib-go-platform-info/cmd/host"
-)
-
-type PlatformInfo struct {
-	hostInfo host.Info
+type platformInfo struct {
 	cmd ICommand
 }
 
-func NewPlatformInfo() *PlatformInfo {
-	p := new(PlatformInfo)
+func NewPlatformInfo() *platformInfo {
+	p := new(platformInfo)
 	p.cmd = new(ICommandFactory).getCmd()
 	return p
 }
@@ -19,7 +14,7 @@ func GetBiosName() string {
 	return ""
 }
 
-func (p PlatformInfo) GetHardwareUUID() string {
+func (p platformInfo) GetHardwareUUID() string {
 	return p.cmd.retrieveHardwareUUID()
 }
 
