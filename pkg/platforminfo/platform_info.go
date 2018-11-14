@@ -1,51 +1,26 @@
 package platforminfo
 
-type platformInfo struct {
-	cmd ICommand
+import "runtime"
+
+type platformInfo interface {
+	BiosName() 			(string,error)
+	HardwareUUID() 		(string,error)
+	OSVersion() 		(string,error)
+	ProcessorFlags() 	([]string,error)
+	ProcessorInfo()		(string,error)
+	VMMName() 			(string,error)
+	VMMVersion() 		(string,error)
+	TPMVersion() 		(string,error)
+	HostName() 			(string,error)
+	NoOfSockets() 		(int,error)
+	TPMEnabled() 		(bool,error)
+	TXTEnabled() 		(bool,error)
 }
 
-func NewPlatformInfo() *platformInfo {
-	p := new(platformInfo)
-	p.cmd = new(ICommandFactory).getCmd()
-	return p
-}
-
-func GetBiosName() string {
-	return ""
-}
-
-func (p platformInfo) GetHardwareUUID() string {
-	return p.cmd.retrieveHardwareUUID()
-}
-
-func GetOSVersion() string {
-	return ""
-}
-
-func GetProcessorFlags() string {
-	return ""
-}
-
-func GetProcessorInfo() string {
-	return ""
-}
-
-func GetVMMName() string {
-	return ""
-}
-
-func GetVMMVersion() string {
-	return ""
-}
-
-func GetTPMVersion() string {
-	return ""
-}
-
-func GetHostName() string {
-	return ""
-}
-
-func GetNoOfSockets() string {
-	return ""
+func New() platformInfo {
+	if runtime.GOOS == "windows" {
+		return new(windowsPlatformInfo)
+	} else {
+		return new(linuxPlatformInfo)
+	}
 }
