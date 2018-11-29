@@ -1,7 +1,7 @@
 package main
 
 import (
-	"intel/isecl/lib/platform-info"
+	p "intel/isecl/lib/platform-info"
 	"log"
 	"os"
 )
@@ -11,7 +11,6 @@ func main() {
 		log.Fatal("Error while executing command line utility. Usage :  ./main platforminfoMethodName")
 	}
 	var methodName string = os.Args[1]
-	p := platforminfo.New()
 	switch methodName {
 	case "BiosName":
 		log.Printf("Bios Name method called")
