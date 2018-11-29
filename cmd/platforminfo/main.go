@@ -8,9 +8,9 @@ import (
 
 func main() {
 	if len(os.Args[1:]) < 1 {
-		log.Fatal("Error while executing command line utility. Usage :  ./main platforminfoMethodName")
+		log.Fatal("Error while executing command line utility. Usage :  ./lib-platform-info platforminfoMethodName")
 	}
-	var methodName string = os.Args[1]
+	var methodName = os.Args[1]
 	switch methodName {
 	case "BiosName":
 		log.Printf("Bios Name method called")
