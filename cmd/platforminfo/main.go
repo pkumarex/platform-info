@@ -13,119 +13,119 @@ func main() {
 	var methodName = os.Args[1]
 	switch methodName {
 	case "BiosName":
-		log.Printf("Bios Name method called")
+		log.Println("Bios Name method called")
 		biosName, err := p.BiosName()
 		if err != nil {
 			log.Fatal("Error during retrieval of Bios Name: ", err)
 		}
-		log.Printf("Bios Name:%s\n", biosName)
+		log.Println("Bios Name:\n", biosName)
 
 	case "BiosVersion":
-		log.Printf("Bios Version method called")
+		log.Println("Bios Version method called")
 		biosVersion, err := p.BiosVersion()
 		if err != nil {
 			log.Fatal("Error during retrieval of Bios Version: ", err)
 		}
-		log.Printf("Bios Version:%s\n", biosVersion)
+		log.Println("Bios Version:\n", biosVersion)
 
 	case "HardwareUUID":
-		log.Printf("Hardware UUID method called")
+		log.Println("Hardware UUID method called")
 		hardwareUUID, err := p.HardwareUUID()
 		if err != nil {
 			log.Fatal("Error during retrieval of Hardware UUID: ", err)
 		}
-		log.Printf("Hardware UUID:%s\n", hardwareUUID)
+		log.Println("Hardware UUID:\n", hardwareUUID)
 
 	case "OSName":
-		log.Printf("OS Name method called")
+		log.Println("OS Name method called")
 		osName, err := p.OSName()
 		if err != nil {
 			log.Fatal("Error during retrieval of OS Name: ", err)
 		}
-		log.Printf("OS Name:%s\n", osName)
+		log.Println("OS Name:\n", osName)
 
 	case "OSVersion":
-		log.Printf("OS Version method called")
+		log.Println("OS Version method called")
 		osVersion, err := p.OSVersion()
 		if err != nil {
 			log.Fatal("Error during retrieval of OS Version: ", err)
 		}
-		log.Printf("OS Version:%s\n", osVersion)
+		log.Println("OS Version:\n", osVersion)
 
 	case "ProcessorFlags":
-		log.Printf("Processor Flags method called")
+		log.Println("Processor Flags method called")
 		processorFlags, err := p.ProcessorFlags()
 		if err != nil {
 			log.Fatal("Error during retrieval of Processor Flags: ", err)
 		}
-		log.Printf("Processor Flags:%s\n", processorFlags)
+		log.Println("Processor Flags:\n", processorFlags)
 
 	case "ProcessorInfo":
-		log.Printf("Processor Info method called")
+		log.Println("Processor Info method called")
 		processorInfo, err := p.ProcessorInfo()
 		if err != nil {
 			log.Fatal("Error during retrieval of Processor Info: ", err)
 		}
-		log.Printf("Processor Info:%s\n", processorInfo)
+		log.Println("Processor Info:\n", processorInfo)
 
 	case "VMMName":
-		log.Printf("VMM Name method called")
+		log.Println("VMM Name method called")
 		vmmName, err := p.VMMName()
 		if err != nil {
 			log.Fatal("Error during retrieval of VMM Name: ", err)
 		}
-		log.Printf("VMM Name:%s\n", vmmName)
+		log.Println("VMM Name:\n", vmmName)
 
 	case "VMMVersion":
-		log.Printf("VMM Version method called")
+		log.Println("VMM Version method called")
 		vmmVersion, err := p.VMMVersion()
 		if err != nil {
 			log.Fatal("Error during retrieval of VMM Version: ", err)
 		}
-		log.Printf("VMM Version:%s\n", vmmVersion)
+		log.Println("VMM Version:\n", vmmVersion)
 
 	case "TPMVersion":
-		log.Printf("TPM Version method called")
+		log.Println("TPM Version method called")
 		tpmVersion, err := p.TPMVersion()
 		if err != nil {
 			log.Fatal("Error during retrieval of TPM Version: ", err)
 		}
-		log.Printf("TPM Version:%s\n", tpmVersion)
+		log.Println("TPM Version:\n", tpmVersion)
 
 	case "HostName":
-		log.Printf("Host Name method called")
+		log.Println("Host Name method called")
 		hostName, err := p.HostName()
 		if err != nil {
 			log.Fatal("Error during retrieval of Host Name: ", err)
 		}
-		log.Printf("Host Name:%s\n", hostName)
+		log.Println("Host Name:\n", hostName)
 
 	case "NoOfSockets":
-		log.Printf("Number of Sockets method called")
+		log.Println("Number of Sockets method called")
 		noOfSockets, err := p.NoOfSockets()
 		if err != nil {
 			log.Fatal("Error during retrieval of Number of Sockets: ", err)
 		}
-		log.Printf("Number of sockets:%s\n", noOfSockets)
+		log.Println("Number of sockets:\n", noOfSockets)
 
 	case "TPMEnabled":
-		log.Printf("TPM Enabled method called")
+		log.Println("TPM Enabled method called")
 		tpmEnabled, err := p.TPMEnabled()
 		if err != nil {
 			log.Fatal("Error during retrieval of status of TPM: ", err)
 		}
-		log.Printf("TPM Enabled:%s\n", tpmEnabled)
+		log.Println("TPM Enabled:\n", tpmEnabled)
 
 	case "TXTEnabled":
-		log.Printf("TXT Enabled method called")
+		log.Println("TXT Enabled method called")
 		txtEnabled, err := p.TXTEnabled()
 		if err != nil {
 			log.Fatal("Error during retrieval of status of TXT: ", err)
 		}
-		log.Printf("TXT Enabled:%s\n", txtEnabled)
+		log.Println("TXT Enabled:\n", txtEnabled)
 
 	default:
-		log.Printf("Invalid method name mentioned.\nExpected values: BiosName, BiosVersion, HardwareUUID, " +
+		log.Println("Invalid method name mentioned.\nExpected values: BiosName, BiosVersion, HardwareUUID, " +
 			"OSName, OSVersion, ProcessorFlags, ProcessorInfo, VMMName, VMMVersion, TPMVersion, HostName, " +
 			"NoOfSockets, TPMEnabled, TXTEnabled")
 	}
