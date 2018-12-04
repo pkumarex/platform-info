@@ -6,10 +6,9 @@ import (
 )
 
 func TestHardwareUUID(t *testing.T) {
-	p := New()
-	hardwareUUID,err := p.HardwareUUID()
+	hardwareUUID, err := HardwareUUID()
 	if err != nil {
-		log.Println(err))
+		log.Println(err)
 	} else {
 		log.Println("Hardware UUID:\n", hardwareUUID)
 	}

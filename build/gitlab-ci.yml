@@ -15,6 +15,9 @@ test:
   tags:
     - go
   script:
+    - echo "Acquire::http::Proxy \"http://proxy-us.intel.com:911\"" >> /etc/apt/apt.conf
+    - echo "Acquire::https::Proxy \"https://proxy-us.intel.com:911\"" >> /etc/apt/apt.conf
+    - apt-get update && apt-get install dmidecode
     - go test -cover
 
 compile:
