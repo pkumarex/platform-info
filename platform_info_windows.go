@@ -23,7 +23,7 @@ func BiosVersion() (string, error) {
 }
 
 // HardwareUUID retireves the host hardware UUID.
-// An example UUID is 4219B2F5-C25F-6AF2-573C-35B0DF557236
+// An example of the host hardware UUID is 4219B2F5-C25F-6AF2-573C-35B0DF557236
 func hardwareUUID() (string, error) {
 	//Output of command:
 	//UUID
