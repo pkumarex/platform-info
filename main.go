@@ -3,13 +3,21 @@ package main
 import (
 	"fmt"
 	p "intel/isecl/lib/platform-info/platforminfo"
+	"intel/isecl/lib/common/validation"
 	"os"
 )
 
 func main() {
-	if len(os.Args[1:]) < 1 {
-		fmt.Println("Error while executing command line utility. Usage :  ./lib-platform-info platforminfoMethodName")
+	inputValArr := os.Args[0:]
+	if valErr := validation.ValidateStrings(inputValArr); valErr != nil {
+		fmt.Println("Invalid string format")
+		os.Exit(1)
 	}
+
+	if len(os.Args[1:]) < 1 {
+		fmt.Printf("Error while executing command line utility. Usage : %s platforminfoMethodName\n", os.Args[0])
+	}
+
 	var methodName = os.Args[1]
 	switch methodName {
 	case "BiosName":
