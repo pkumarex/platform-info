@@ -1,117 +1,138 @@
-//+build integration
-
 /*
  * Copyright (C) 2019 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-//
-// These tests require systemd to run 'dmidecode' and to be run as root.
-//
 package platforminfo
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestBiosName(t *testing.T) {
-	assert := assert.New(t)
 	biosName, err := BiosName()
-	assert.NoError(err)
-	fmt.Printf("Bios Name: '%s'\n", biosName)
+	fmt.Println("Bios Name:")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Bios Name:\n", biosName)
+	}
 }
 
 func TestBiosVersion(t *testing.T) {
-	assert := assert.New(t)
 	biosVersion, err := BiosVersion()
-	assert.NoError(err)
-	fmt.Printf("Bios Version: '%s'\n", biosVersion)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Bios Version:\n", biosVersion)
+	}
 }
 
 func TestHardwareUUID(t *testing.T) {
-	assert := assert.New(t)
 	hardwareUUID, err := HardwareUUID()
-	assert.NoError(err)
-	fmt.Printf("Hardware UUID: '%s'\n", hardwareUUID)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Hardware UUID:\n", hardwareUUID)
+	}
 }
 
 func TestOSName(t *testing.T) {
-	assert := assert.New(t)
 	osName, err := OSName()
-	assert.NoError(err)
-	fmt.Printf("OS Name: '%s'\n", osName)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("OS Name:\n", osName)
+	}
 }
 
 func TestOSVersion(t *testing.T) {
-	assert := assert.New(t)
 	osVersion, err := OSVersion()
-	assert.NoError(err)
-	fmt.Printf("OS Version: '%s'\n", osVersion)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("OS Version:\n", osVersion)
+	}
 }
 
 func TestProcessorFlags(t *testing.T) {
-	assert := assert.New(t)
 	processorFlags, err := ProcessorFlags()
-	assert.NoError(err)
-	fmt.Printf("Flags for processor 0: '%s'\n", strings.Join(processorFlags, ", "))
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Flags for processor 0:\n", strings.Join(processorFlags, ", "))
+	}
 }
 
 func TestProcessorID(t *testing.T) {
-	assert := assert.New(t)
 	processorID, err := ProcessorID()
-	assert.NoError(err)
-	fmt.Printf("ID for processor 0: '%s'\n", processorID)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("ID for processor 0:\n", processorID)
+	}
 }
 
 func TestVMMName(t *testing.T) {
-	assert := assert.New(t)
 	vmmName, err := VMMName()
-	assert.NoError(err)
-	fmt.Printf("Hypervisor name: '%s'\n", vmmName)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Hypervisor name:\n", vmmName)
+	}
 }
 
 func TestVMMVersion(t *testing.T) {
-	assert := assert.New(t)
 	vmmVersion, err := VMMVersion()
-	assert.NoError(err)
-	fmt.Printf("Hypervisor version: '%s'\n", vmmVersion)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Hypervisor version:\n", vmmVersion)
+	}
 }
 
 func TestTPMVersion(t *testing.T) {
-	assert := assert.New(t)
 	tpmVersion, err := TPMVersion()
-	assert.NoError(err)
-	fmt.Printf("TPM version: '%s'\n", tpmVersion)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("TPM version:\n", tpmVersion)
+	}
 }
 
 func TestHostName(t *testing.T) {
-	assert := assert.New(t)
 	hostName, err := HostName()
-	assert.NoError(err)
-	fmt.Printf("Host name: '%s'\n", hostName)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Host name:\n", hostName)
+	}
 }
 
 func TestNoOfSockets(t *testing.T) {
-	assert := assert.New(t)
 	numSockets, err := NoOfSockets()
-	assert.NoError(err)
-	fmt.Printf("Number of sockets: '%d'\n", numSockets)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Number of sockets:\n", string(numSockets))
+	}
 }
 
 func TestTPMEnabled(t *testing.T) {
-	assert := assert.New(t)
 	tpmStatus, err := TPMEnabled()
-	assert.NoError(err)
-	fmt.Printf("TPM Enabled: '%t'\n", tpmStatus)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("TPM Enabled:\n", tpmStatus)
+	}
 }
 
 func TestTXTEnabled(t *testing.T) {
-	assert := assert.New(t)
 	txtStatus, err := TXTEnabled()
-	assert.NoError(err)
-	fmt.Printf("TXT Enabled: '%t'\n", txtStatus)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("TXT Enabled:\n", txtStatus)
+	}
 }
