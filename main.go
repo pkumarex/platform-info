@@ -20,6 +20,7 @@ func main() {
 
 	if len(os.Args[1:]) < 1 {
 		fmt.Printf("Error while executing command line utility. Usage : %s platforminfoMethodName\n", os.Args[0])
+		os.Exit(1)
 	}
 
 	var methodName = os.Args[1]
