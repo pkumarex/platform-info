@@ -6,7 +6,6 @@
 
  import (
 	 "os"
-	 "runtime"
 	 "strings"
  )
 
@@ -114,7 +113,7 @@
 	 platformInfo.NumberOfSockets, _ = NoOfSockets()
 	 platformInfo.TPMEnabled, _ = TPMEnabled()
 	 platformInfo.TXTEnabled, _ = TXTEnabled()
-	 platformInfo.TbootInstalled = runtime.GOOS == "linux"
+	 platformInfo.TbootInstalled = platformInfo.TXTEnabled
 	 platformInfo.IsDockerEnvironment = strings.Contains(strings.ToLower(platformInfo.VMMName), "docker")
 	 platformInfo.HardwareFeatures.TXT.Enabled = platformInfo.TXTEnabled
 	 platformInfo.HardwareFeatures.TPM.Enabled = platformInfo.TPMEnabled
