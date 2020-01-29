@@ -8,11 +8,14 @@
 package platforminfo
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"encoding/binary"
+	"fmt"
+	"os/exec"
 )
 
 var (
@@ -32,6 +35,16 @@ const (
 	tpmVersion12 = "1.2"
 	tpmVersion20 = "2.0"
 	txtMLELaunchMsg = "TXT measured launch:"
+	CBNT_MSR_OFFSET = 0x13A
+	TXT_MSR_OFFSET = 0x3A
+	MSR_DEVICE = "/dev/cpu/0/msr"
+	CBNT_PROCESSOR_FLAGS = "mk ris kfm"
+	CBNT_PROFILE_4 = "BTGP4"
+	CBNT_PROFILE_5 = "BTGP5"
+	CBNT_PROFILE_4_FLAGS = 0x51
+	CBNT_PROFILE_5_FLAGS = 0x7d
+	TXT_STATUS_ENABLED = 0x3
+	SECURE_BOOT_ENABLED = "Secure Boot: enabled"
 )
 
 var (
@@ -45,6 +58,7 @@ var (
 	hostNameCmd      = []string{"hostname"}
 	noSocketsCmd     = []string{"lscpu"}
 	txtEnabledCmd    = []string{"txt-stat"}
+	suefiBootCtlCmd	 = []string{"bootctl", "status"}
 )
 
 // BiosName retrieves the host BIOS name.
@@ -345,8 +359,8 @@ func TPMEnabled() (bool, error) {
 	return tpmEnabled, err
 }
 
-// TXTEnabled indicates whether Intel TXT is enabled or not.
-func TXTEnabled() (bool, error) {
+// Run txt-stat to see if tboot is installed
+func TbootInstalled() (bool, error) {
 	result, err := readAndParseFromCommandLine(txtEnabledCmd)
 	if err != nil {
 		return false, nil
@@ -361,4 +375,137 @@ func TXTEnabled() (bool, error) {
 		}
 	}
 	return txtStatus, err
+}
+
+// Utility function that reads an unsigned long long from /dev/cpu/0/msr at offset 
+// 'offset'
+func ReadMSR(offset int64) (uint64, error) {
+
+	msr, err := os.Open(MSR_DEVICE)
+	if err != nil {
+		return 0, errors.Wrapf(err, "platforminfo:ReadMSR(): Error opening msr")
+	}
+
+	defer msr.Close()
+
+	_, err = msr.Seek(offset, 0)
+	if err != nil {
+		return 0, errors.Wrapf(err, "platforminfo:ReadMSR(): Could not seek to location %x", offset)
+	}
+
+	results := make([]byte, 8)
+	len, err := msr.Read(results)
+	if len < 8 {
+		return 0, errors.New("platforminfo:ReadMSR(): Reading the msr returned the incorrect length")
+	} else if err != nil {
+		return 0, errors.Wrapf(err, "platforminfo:ReadMSR(): There was an error reading msr at offset %x", offset)
+	}
+
+	return binary.LittleEndian.Uint64(results), nil
+}
+
+// Utility function that returns the integer value between 'hibit' and 'lowbit'
+func GetBits(value uint64, hibit uint, lowbit uint) (uint64, error) {
+	bits := hibit - lowbit + 1
+	if bits > 64 {
+		return 0, errors.New("platforminfo:GetBits(): Invalid hi/low bit parameters")
+	}
+
+	value >>= lowbit
+	value &= (uint64(1) << bits) -1
+	return value, nil
+}
+
+// Read the MSR at 0x3a to determine if txt is enabled (i.e. bits 1:0 return '3')
+// similar to running "rdmsr -f 1:0 0x3a"
+func TXTEnabled() (bool, error) {
+
+	txtBits, err := ReadMSR(TXT_MSR_OFFSET)
+	if err != nil {
+		return false, err
+	}
+
+	txtStatus, err := GetBits(txtBits, 1, 0)
+	if err != nil {
+		return false, err
+	}
+
+	if txtStatus == TXT_STATUS_ENABLED {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// Provide the CBNT bits, read bits 7:0 to determine the boot guard
+// profile.  This function assumes that cbnt is enabled when being called.  The value
+// 0x51 indicates BTGP4, 0x7d is BTGP5.
+//
+// Similar to "rdmsr -f 7:0 0x13A"
+func GetCBNTProfile(cbntBits uint64) (string, error) {
+
+	cbntProfileFlags, err := GetBits(cbntBits, 7, 0)
+	if err != nil {
+		return "", err
+	}
+
+	if cbntProfileFlags == CBNT_PROFILE_4_FLAGS {
+		return CBNT_PROFILE_4, nil
+	} else if cbntProfileFlags == CBNT_PROFILE_5_FLAGS {
+		return CBNT_PROFILE_5, nil
+	}
+
+	return "", fmt.Errorf("platforminfo:GetCBNTProfile(): Could not determine CBNT profile with flags %x", cbntProfileFlags)
+}
+
+// If CBNT is enabled, create a valid "CBNT" pointer/structure.  Otherwise
+// return a nil pointer (i.e. CBNT is not enabled).
+func GetCBNTHardwareFeature() (*CBNT, error) {
+
+	cbntBits, err := ReadMSR(CBNT_MSR_OFFSET)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if CBNT is enabled
+	// similar to 'rdmsr -f 32:32 0x13A
+	cbntEnabled, err := GetBits(cbntBits, 32, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	// CBNT is enabled, create a CBNT structure and populate it.
+	if cbntEnabled == 1 {
+		cbnt := CBNT{}
+		cbnt.Enabled = true
+		cbnt.Meta.MSR = CBNT_PROCESSOR_FLAGS
+		cbnt.Meta.ForceBit = true
+
+		cbnt.Meta.Profile, err = GetCBNTProfile(cbntBits)
+		if err != nil {
+			return nil, err
+		}
+	
+		return &cbnt, nil
+	}
+
+	return nil, nil
+}
+
+// If Secure Boot is eabled, create a "HardwareFeature" pointer/structure.  Otherwise,
+// return nil (.e. SUEFI is not enabled).
+func GetSUEFIHardwareFeature() (*HardwareFeature, error) {
+
+	// call 'bootctl status'. Ignore errors because 'bootctl' can return '1'
+	// even when valid output is present onstdout.  Just see if stdout contains
+	// "Secure Boot: enabled" to determine if SUEFI is enabled.
+	cmd := exec.Command(suefiBootCtlCmd[0], suefiBootCtlCmd[1])
+	stdout, _ := cmd.Output()
+	if strings.Contains(string(stdout), SECURE_BOOT_ENABLED) {
+		suefi := HardwareFeature{}
+		suefi.Enabled = true
+		return &suefi, nil
+	}
+
+	return nil, nil
 }

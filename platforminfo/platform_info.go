@@ -1,3 +1,5 @@
+// +build linux
+
 /*
  * Copyright (C) 2019 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
@@ -5,12 +7,14 @@
  package platforminfo
 
  import (
-	 "os"
+	 "os/exec"
 	 "strings"
+	 "github.com/pkg/errors"
  )
 
  const (
 	 BindingKeyCertificatePath = "/etc/workload-agent/bindingkey.pem"
+	 WLAGENT = "wlagent"
  )
  
  // Struct used to hold the current host's platform information that can be encoded/decoded to
@@ -56,77 +60,158 @@
  //         "tagent"
  //     ]
  // }
- type PlatformInfo struct {
-	 ErrorCode           int      `json:"errorCode"`
-	 OSName              string   `json:"os_name"`
-	 OSVersion           string   `json:"os_version"`
-	 BiosVersion         string   `json:"bios_version"`
-	 VMMName             string   `json:"vmm_name"`
-	 VMMVersion          string   `json:"vmm_version"`
-	 ProcessorInfo       string   `json:"processor_info"`
-	 HostName            string   `json:"host_name"`
-	 BiosName            string   `json:"bios_name"`
-	 HardwareUUID        string   `json:"hardware_uuid"`
-	 ProcessorFlags      string   `json:"process_flags"`
-	 TPMVersion          string   `json:"tpm_version"`
-	 PCRBanks            []string `json:"pcr_banks"`
-	 NumberOfSockets     int      `json:"no_of_sockets,string"`
-	 TPMEnabled          bool     `json:"tpm_enabled,string"`
-	 TXTEnabled          bool     `json:"txt_enabled,string"`
-	 TbootInstalled      bool     `json:"tboot_installed,string"`
-	 IsDockerEnvironment bool     `json:"is_docker_env,string"`
-	 HardwareFeatures    struct {
-		 TXT struct {
-			 Enabled bool `json:"enabled,string"`
-		 } `json:"TXT"`
-		 TPM struct {
-			 Enabled bool `json:"enabled,string"`
-			 Meta    struct {
-				 TPMVersion string `json:"tpm_version"`
-				 PCRBanks   string `json:"pcr_banks"`
-			 } `json:"meta"`
-		 } `json:"TPM"`
-	 } `json:"hardware_features"`
-	 InstalledComponents []string `json:"installed_components"`
- }
+ //
+ //------------------------------------------------------------------------------------------------
+ // BootGuard machines will contain the 'CBNT' section in 'hardware_features'...
+ //------------------------------------------------------------------------------------------------
+ // 
+ //    "hardware_features": {
+ //         "CBNT": {
+ // 	            "enabled": true,
+ // 	            "meta": {
+ // 	                "force_bit": "true",
+ // 	                "profile": "BTGP4",
+ // 	                "msr": "mk ris kfm"
+ // 	            }
+ // 	        },
+ //         "TXT": {
+ //             "enabled": true
+ //         },
+ //         "TPM": {
+ //             "enabled": true,
+ //             "meta": {
+ //                 "tpm_version": "2.0",
+ //                 "pcr_banks": "SHA1_SHA256"
+ //             }
+ //         }
+ //    }, //
+ //
+ //------------------------------------------------------------------------------------------------
+ // Secure Boot systems will contain the 'SUEFI' section in 'hardware_features'...
+ //------------------------------------------------------------------------------------------------
+ //
+ //    "hardware_features": {
+ //         "TXT": {
+ // 	            "enabled": false
+ // 	        },
+ // 	        "TPM": {
+ // 	            "enabled": true,
+ // 	            "meta": {
+ // 	                "tpm_version": "2.0",
+ // 	                "pcr_banks": "SHA1_SHA256"
+ // 	            }
+ // 	        },
+ // 	        "SUEFI": {
+ // 	            "enabled": true
+ // 	        }
+ //     },
+ //
+
+type CBNT struct {
+	Enabled bool `json:"enabled,string"`
+	Meta struct {
+		ForceBit bool `json:"force_bit,string"`
+		Profile string `json:"profile"`
+		MSR string `json:"msr"`
+	} `json:"meta"`
+}
+
+type HardwareFeature struct {
+	Enabled bool `json:"enabled,string"`
+}
+
+
+type PlatformInfo struct {
+	ErrorCode           int      `json:"errorCode"`
+	OSName              string   `json:"os_name"`
+	OSVersion           string   `json:"os_version"`
+	BiosVersion         string   `json:"bios_version"`
+	VMMName             string   `json:"vmm_name"`
+	VMMVersion          string   `json:"vmm_version"`
+	ProcessorInfo       string   `json:"processor_info"`
+	HostName            string   `json:"host_name"`
+	BiosName            string   `json:"bios_name"`
+	HardwareUUID        string   `json:"hardware_uuid"`
+	ProcessorFlags      string   `json:"process_flags"`
+	TPMVersion          string   `json:"tpm_version"`
+	PCRBanks            []string `json:"pcr_banks"`
+	NumberOfSockets     int      `json:"no_of_sockets,string"`
+	TPMEnabled          bool     `json:"tpm_enabled,string"`
+	TXTEnabled          bool     `json:"txt_enabled,string"`
+	TbootInstalled      bool     `json:"tboot_installed,string"`
+	IsDockerEnvironment bool     `json:"is_docker_env,string"`
+	HardwareFeatures    struct {
+		TXT HardwareFeature `json:"TXT"`
+		TPM struct {
+			Enabled bool `json:"enabled,string"`
+			Meta struct {
+				TPMVersion string `json:"tpm_version"`
+				PCRBanks   string `json:"pcr_banks"`
+			} `json:"meta"`
+		} `json:"TPM"`
+		CBNT *CBNT `json:"CBNT,omitempty"`
+		SUEFI *HardwareFeature `json:"SUEFI,omitempty"`
+	} `json:"hardware_features"`
+	InstalledComponents []string `json:"installed_components"`
+}
  
- func GetPlatformInfo() (PlatformInfo, error) {
-	 platformInfo := PlatformInfo{}
- 
-	 // TODO:  Handle error conditions...
-	 platformInfo.ErrorCode = 0
-	 platformInfo.OSName, _ = OSName()
-	 platformInfo.OSVersion, _ = OSVersion()
-	 platformInfo.BiosVersion, _ = BiosVersion()
-	 platformInfo.VMMName, _ = VMMName()
-	 platformInfo.VMMVersion, _ = VMMVersion()
-	 platformInfo.ProcessorInfo, _ = ProcessorID()
-	 platformInfo.HostName, _ = HostName()
-	 platformInfo.BiosName, _ = BiosName()
-	 platformInfo.HardwareUUID, _ = HardwareUUID()
- 
-	 processorFlags, _ := ProcessorFlags()
-	 platformInfo.ProcessorFlags = strings.Join(processorFlags, " ")
- 
-	 platformInfo.TPMVersion, _ = TPMVersion()
-	 platformInfo.PCRBanks = []string{"SHA1", "SHA256"} // TODO
-	 platformInfo.NumberOfSockets, _ = NoOfSockets()
-	 platformInfo.TPMEnabled, _ = TPMEnabled()
-	 platformInfo.TXTEnabled, _ = TXTEnabled()
-	 platformInfo.TbootInstalled = platformInfo.TXTEnabled
-	 platformInfo.IsDockerEnvironment = strings.Contains(strings.ToLower(platformInfo.VMMName), "docker")
-	 platformInfo.HardwareFeatures.TXT.Enabled = platformInfo.TXTEnabled
-	 platformInfo.HardwareFeatures.TPM.Enabled = platformInfo.TPMEnabled
-	 platformInfo.HardwareFeatures.TPM.Meta.TPMVersion = platformInfo.TPMVersion
-	 platformInfo.HardwareFeatures.TPM.Meta.PCRBanks = strings.Join(platformInfo.PCRBanks, "_")
-	 platformInfo.InstalledComponents = []string{"tagent"}
- 
-	 // if /etc/workload-agent/bindingkey.pem exists, communicate that 'WLA' is installed.
-	 _, err := os.Stat(BindingKeyCertificatePath)
-	 if err == nil {
-		 platformInfo.InstalledComponents = append(platformInfo.InstalledComponents, "wlagent")
-	 }
- 
-	 return platformInfo, nil
- }
- 
+func GetPlatformInfo() (*PlatformInfo, error) {
+	var err error
+	platformInfo := PlatformInfo{}
+
+	// TODO:  Handle error conditions...
+	platformInfo.ErrorCode = 0
+	platformInfo.OSName, _ = OSName()
+	platformInfo.OSVersion, _ = OSVersion()
+	platformInfo.BiosVersion, _ = BiosVersion()
+	platformInfo.VMMName, _ = VMMName()
+	platformInfo.VMMVersion, _ = VMMVersion()
+	platformInfo.ProcessorInfo, _ = ProcessorID()
+	platformInfo.HostName, _ = HostName()
+	platformInfo.BiosName, _ = BiosName()
+	platformInfo.HardwareUUID, _ = HardwareUUID()
+
+	processorFlags, _ := ProcessorFlags()
+	platformInfo.ProcessorFlags = strings.Join(processorFlags, " ")
+
+	platformInfo.TPMVersion, _ = TPMVersion()
+	platformInfo.PCRBanks = []string{"SHA1", "SHA256"}
+	platformInfo.NumberOfSockets, _ = NoOfSockets()
+	platformInfo.TPMEnabled, _ = TPMEnabled()
+	platformInfo.TXTEnabled, _ = TXTEnabled()
+	platformInfo.TbootInstalled, _ = TbootInstalled()
+	platformInfo.IsDockerEnvironment = strings.Contains(strings.ToLower(platformInfo.VMMName), "docker")
+	platformInfo.HardwareFeatures.TXT.Enabled = platformInfo.TXTEnabled
+	platformInfo.HardwareFeatures.TPM.Enabled = platformInfo.TPMEnabled
+	platformInfo.HardwareFeatures.TPM.Meta.TPMVersion = platformInfo.TPMVersion
+	platformInfo.HardwareFeatures.TPM.Meta.PCRBanks = strings.Join(platformInfo.PCRBanks, "_")
+	platformInfo.InstalledComponents = []string{"tagent"}
+
+	platformInfo.HardwareFeatures.CBNT, err = GetCBNTHardwareFeature()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error getting CBNT information")
+	}
+
+	platformInfo.HardwareFeatures.SUEFI, err = GetSUEFIHardwareFeature()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error getting SUEFI information")
+	}
+
+	if WLAIsInstalled() {
+		platformInfo.InstalledComponents = append(platformInfo.InstalledComponents, WLAGENT)
+	}
+
+	return &platformInfo, nil
+}
+
+// Run 'which wlagent'.  If the command returns '0' (no error) then workload-agent is installed.
+func WLAIsInstalled() bool {
+	cmd := exec.Command("which", WLAGENT)
+
+	err := cmd.Run()
+	if err != nil {
+		return false
+	}
+
+	return true
+}

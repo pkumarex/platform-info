@@ -9,17 +9,33 @@ import (
 	p "intel/isecl/lib/platform-info/platforminfo"
 	"intel/isecl/lib/common/validation"
 	"os"
+	"encoding/json"
 )
 
 func main() {
+
+	// if no arguments were provided, just dump platform-info json to stdout
+	if len(os.Args[1:]) < 1 {
+		platformInfo, err := p.GetPlatformInfo()
+		if err != nil {
+			fmt.Printf("main: Error while fetching platform info: %s", err)
+			os.Exit(1)
+		}
+	
+		// serialize to json
+		b, err := json.MarshalIndent(platformInfo, "", "\t")
+		if err != nil {
+			fmt.Printf("main: Error while serializing platform info: %s", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf(string(b))
+		os.Exit(0)
+	}
+
 	inputValArr := os.Args[0:]
 	if valErr := validation.ValidateStrings(inputValArr); valErr != nil {
 		fmt.Println("Invalid string format")
-		os.Exit(1)
-	}
-
-	if len(os.Args[1:]) < 1 {
-		fmt.Printf("Error while executing command line utility. Usage : %s platforminfoMethodName\n", os.Args[0])
 		os.Exit(1)
 	}
 
