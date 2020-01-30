@@ -121,14 +121,6 @@ func HardwareUUID() (string, error) {
 func OSName() (string, error) {
 
 	osName, _, err := osNameAndVersion()
-
-	// ISECL-7227:  This is a hack to get flavors to work in hvs.  HVS is expecting "RedHatEnterpriseServer",
-	// but on RHEL8 'lsb_release -a' is returning "RedHatEnterprise".  This needs to be
-	// fixed in HVS.
-	if osName == "RedHatEnterprise" {
-		osName = "RedHatEnterpriseServer"
-	}
-
 	return osName, err
 }
 
