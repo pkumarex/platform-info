@@ -8,6 +8,7 @@
 
  import (
 	 "os/exec"
+	 "os"
 	 "strings"
 	 "github.com/pkg/errors"
  )
@@ -180,7 +181,7 @@ func GetPlatformInfo() (*PlatformInfo, error) {
 	platformInfo.TPMEnabled, _ = TPMEnabled()
 	platformInfo.TXTEnabled, _ = TXTEnabled()
 	platformInfo.TbootInstalled, _ = TbootInstalled()
-	platformInfo.IsDockerEnvironment = strings.Contains(strings.ToLower(platformInfo.VMMName), "docker")
+	platformInfo.IsDockerEnvironment = fileExists("/.dockerenv")
 	platformInfo.HardwareFeatures.TXT.Enabled = platformInfo.TXTEnabled
 	platformInfo.HardwareFeatures.TPM.Enabled = platformInfo.TPMEnabled
 	platformInfo.HardwareFeatures.TPM.Meta.TPMVersion = platformInfo.TPMVersion
@@ -204,6 +205,13 @@ func GetPlatformInfo() (*PlatformInfo, error) {
 	return &platformInfo, nil
 }
 
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
 // Run 'which wlagent'.  If the command returns '0' (no error) then workload-agent is installed.
 func WLAIsInstalled() bool {
 	cmd := exec.Command("which", WLAGENT)
