@@ -1,8 +1,8 @@
-module intel/isecl/lib/platform-info
+module intel/isecl/lib/platform-info/v2
 
-go 1.12
 require (
-	intel/isecl/lib/common v1.0.0-Beta
+	github.com/pkg/errors v0.9.1
+	intel/isecl/lib/common/v2 v2.0.0
 )
 
-replace intel/isecl/lib/common => github.com/intel-secl/common v2.0.0
+replace intel/isecl/lib/common/v2 => gitlab.devtools.intel.com/sst/isecl/lib/common.git/v2 v2.1/develop
