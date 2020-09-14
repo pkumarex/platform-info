@@ -53,7 +53,7 @@ var (
 	hardwareUUIDCmd  = []string{"dmidecode", "-s", "system-uuid"}
 	osInfoCmd        = []string{"lsb_release", "-a"}
 	processorInfoCmd = []string{"dmidecode", "--type", "processor"}
-	dockerVersionCmd = []string{"docker", "-v"}
+	dockerVersionCmd = []string{"docker", "version", "--format", "'{{.Server.Version}}'"}
 	virshVersionCmd  = []string{"virsh", "-v"}
 	hostNameCmd      = []string{"hostname"}
 	noSocketsCmd     = []string{"lscpu"}
