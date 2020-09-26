@@ -8,14 +8,15 @@
 package platforminfo
 
 import (
-	"github.com/pkg/errors"
+	"encoding/binary"
+	"fmt"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
-	"encoding/binary"
-	"fmt"
-	"os/exec"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -26,25 +27,27 @@ var (
 )
 
 const (
-	tpm12File  = "/sys/class/tpm/tpm0/device/enabled"
-	tpm20File0 = "/sys/class/tpm/tpm0/device/description"
-	tpm20File1 = "/sys/class/tpm/tpm0/device/firmware_node/description"
+	tpm12File            = "/sys/class/tpm/tpm0/device/enabled"
+	tpm20File0           = "/sys/class/tpm/tpm0/device/description"
+	tpm20File1           = "/sys/class/tpm/tpm0/device/firmware_node/description"
 	classMiscDevCapsFile = "/sys/class/misc/tpm0/device/caps"
-	classTpmDevCapsFile = "/sys/class/tpm/tpm0/device/caps"
-	tpmDevFile = "/dev/tpm0"
-	tpmVersion12 = "1.2"
-	tpmVersion20 = "2.0"
-	txtMLELaunchMsg = "TXT measured launch:"
-	CBNT_MSR_OFFSET = 0x13A
-	TXT_MSR_OFFSET = 0x3A
-	MSR_DEVICE = "/dev/cpu/0/msr"
+	classTpmDevCapsFile  = "/sys/class/tpm/tpm0/device/caps"
+	tpmDevFile           = "/dev/tpm0"
+	tpmVersion12         = "1.2"
+	tpmVersion20         = "2.0"
+	txtMLELaunchMsg      = "TXT measured launch:"
+	CBNT_MSR_OFFSET      = 0x13A
+	TXT_MSR_OFFSET       = 0x3A
+	MSR_DEVICE           = "/dev/cpu/0/msr"
 	CBNT_PROCESSOR_FLAGS = "mk ris kfm"
-	CBNT_PROFILE_4 = "BTGP4"
-	CBNT_PROFILE_5 = "BTGP5"
+	CBNT_PROFILE_3       = "BTGP3"
+	CBNT_PROFILE_4       = "BTGP4"
+	CBNT_PROFILE_5       = "BTGP5"
+	CBNT_PROFILE_3_FLAGS = 0x6d
 	CBNT_PROFILE_4_FLAGS = 0x51
 	CBNT_PROFILE_5_FLAGS = 0x7d
-	TXT_STATUS_ENABLED = 0x3
-	SECURE_BOOT_ENABLED = "Secure Boot: enabled"
+	TXT_STATUS_ENABLED   = 0x3
+	SECURE_BOOT_ENABLED  = "Secure Boot: enabled"
 )
 
 var (
@@ -58,7 +61,7 @@ var (
 	hostNameCmd      = []string{"hostname"}
 	noSocketsCmd     = []string{"lscpu"}
 	txtEnabledCmd    = []string{"txt-stat"}
-	suefiBootCtlCmd	 = []string{"bootctl", "status"}
+	suefiBootCtlCmd  = []string{"bootctl", "status"}
 )
 
 // BiosName retrieves the host BIOS name.
@@ -369,7 +372,7 @@ func TbootInstalled() (bool, error) {
 	return txtStatus, err
 }
 
-// Utility function that reads an unsigned long long from /dev/cpu/0/msr at offset 
+// Utility function that reads an unsigned long long from /dev/cpu/0/msr at offset
 // 'offset'
 func ReadMSR(offset int64) (uint64, error) {
 
@@ -404,7 +407,7 @@ func GetBits(value uint64, hibit uint, lowbit uint) (uint64, error) {
 	}
 
 	value >>= lowbit
-	value &= (uint64(1) << bits) -1
+	value &= (uint64(1) << bits) - 1
 	return value, nil
 }
 
@@ -441,7 +444,9 @@ func GetCBNTProfile(cbntBits uint64) (string, error) {
 		return "", err
 	}
 
-	if cbntProfileFlags == CBNT_PROFILE_4_FLAGS {
+	if cbntProfileFlags == CBNT_PROFILE_3_FLAGS {
+		return CBNT_PROFILE_3, nil
+	} else if cbntProfileFlags == CBNT_PROFILE_4_FLAGS {
 		return CBNT_PROFILE_4, nil
 	} else if cbntProfileFlags == CBNT_PROFILE_5_FLAGS {
 		return CBNT_PROFILE_5, nil
@@ -477,7 +482,7 @@ func GetCBNTHardwareFeature() (*CBNT, error) {
 		if err != nil {
 			return nil, err
 		}
-	
+
 		return &cbnt, nil
 	}
 
