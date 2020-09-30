@@ -56,7 +56,7 @@ var (
 	hardwareUUIDCmd  = []string{"dmidecode", "-s", "system-uuid"}
 	osInfoCmd        = []string{"lsb_release", "-a"}
 	processorInfoCmd = []string{"dmidecode", "--type", "processor"}
-	dockerVersionCmd = []string{"docker", "version", "--format", "'{{.Server.Version}}'"}
+	dockerVersionCmd = []string{"dockerd", "-v"}
 	virshVersionCmd  = []string{"virsh", "-v"}
 	hostNameCmd      = []string{"hostname"}
 	noSocketsCmd     = []string{"lscpu"}
@@ -273,9 +273,9 @@ func VMMVersion() (string, error) {
 func vmmInfo() (string, string, error) {
 	// Check if docker is installed
 	/*
-		Sample response of 'docker -v'
+		Sample response of 'dockerd -v'
 
-		Docker version 1.13.1, build 07f3374/1.13.1
+		Docker version 19.03.5, build 633a0ea
 	*/
 	result, err := readAndParseFromCommandLine(dockerVersionCmd)
 
