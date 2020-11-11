@@ -40,9 +40,11 @@ const (
 	TXT_MSR_OFFSET       = 0x3A
 	MSR_DEVICE           = "/dev/cpu/0/msr"
 	CBNT_PROCESSOR_FLAGS = "mk ris kfm"
+	CBNT_PROFILE_0       = "BTGP0"
 	CBNT_PROFILE_3       = "BTGP3"
 	CBNT_PROFILE_4       = "BTGP4"
 	CBNT_PROFILE_5       = "BTGP5"
+	CBNT_PROFILE_0_FLAGS = 0x0
 	CBNT_PROFILE_3_FLAGS = 0x6d
 	CBNT_PROFILE_4_FLAGS = 0x51
 	CBNT_PROFILE_5_FLAGS = 0x7d
@@ -444,11 +446,14 @@ func GetCBNTProfile(cbntBits uint64) (string, error) {
 		return "", err
 	}
 
-	if cbntProfileFlags == CBNT_PROFILE_3_FLAGS {
+	switch cbntProfileFlags {
+	case CBNT_PROFILE_0_FLAGS:
+		return CBNT_PROFILE_0, nil
+	case CBNT_PROFILE_3_FLAGS:
 		return CBNT_PROFILE_3, nil
-	} else if cbntProfileFlags == CBNT_PROFILE_4_FLAGS {
+	case CBNT_PROFILE_4_FLAGS:
 		return CBNT_PROFILE_4, nil
-	} else if cbntProfileFlags == CBNT_PROFILE_5_FLAGS {
+	case CBNT_PROFILE_5_FLAGS:
 		return CBNT_PROFILE_5, nil
 	}
 
@@ -474,14 +479,13 @@ func GetCBNTHardwareFeature() (*CBNT, error) {
 	// CBNT is enabled, create a CBNT structure and populate it.
 	if cbntEnabled == 1 {
 		cbnt := CBNT{}
-		cbnt.Enabled = true
-		cbnt.Meta.MSR = CBNT_PROCESSOR_FLAGS
-		cbnt.Meta.ForceBit = true
-
 		cbnt.Meta.Profile, err = GetCBNTProfile(cbntBits)
 		if err != nil {
 			return nil, err
 		}
+		cbnt.Enabled = cbnt.Meta.Profile != CBNT_PROFILE_0
+		cbnt.Meta.MSR = CBNT_PROCESSOR_FLAGS
+		cbnt.Meta.ForceBit = true
 
 		return &cbnt, nil
 	}
