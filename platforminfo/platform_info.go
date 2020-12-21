@@ -103,11 +103,11 @@ const (
 // 	            }
 // 	        },
 // 	        "UEFI": {
-//				"enabled": "true",
-//				"meta": {
-//					"secure_boot_enabled": false
-//				}
-//			},
+//		    "enabled": "true",
+//		    "meta": {
+//			"secure_boot_enabled": false
+//		    }
+//		},
 //     },
 //
 
