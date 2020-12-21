@@ -498,8 +498,7 @@ func GetUEFIHardwareFeature() (UEFI, error) {
 	var uefi UEFI
 	//Checking the presence of efi directory to make sure the current boot is in UEFI mode.
 	//In case of legacy mode this directory wont be available.
-	_, err := os.Stat("/sys/firmware/efi")
-	if err != nil {
+	if _, err := os.Stat("/sys/firmware/efi"); os.IsNotExist(err) {
 		return uefi, nil
 	} else {
 		uefi.HardwareFeature.Enabled = true
