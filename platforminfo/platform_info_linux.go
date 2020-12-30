@@ -460,42 +460,49 @@ func GetCBNTProfile(cbntBits uint64) (string, error) {
 	return "", fmt.Errorf("platforminfo:GetCBNTProfile(): Could not determine CBNT profile with flags %x", cbntProfileFlags)
 }
 
-// If CBNT is enabled, create a valid "CBNT" pointer/structure.  Otherwise
-// return a nil pointer (i.e. CBNT is not enabled).
-func GetCBNTHardwareFeature() (*CBNT, error) {
+// If CBNT is enabled, create a valid "CBNT" structure.  Otherwise
+// return a empty structure (i.e. CBNT is not enabled).
+func GetCBNTHardwareFeature() (CBNT, error) {
+
+	var cbnt CBNT
 
 	cbntBits, err := ReadMSR(CBNT_MSR_OFFSET)
 	if err != nil {
-		return nil, err
+		return cbnt, err
 	}
 
 	// check if CBNT is enabled
 	// similar to 'rdmsr -f 32:32 0x13A
 	cbntEnabled, err := GetBits(cbntBits, 32, 32)
 	if err != nil {
-		return nil, err
+		return cbnt, err
 	}
 
 	// CBNT is enabled, create a CBNT structure and populate it.
 	if cbntEnabled == 1 {
-		cbnt := CBNT{}
 		cbnt.Meta.Profile, err = GetCBNTProfile(cbntBits)
 		if err != nil {
-			return nil, err
+			return cbnt, err
 		}
 		cbnt.Enabled = cbnt.Meta.Profile != CBNT_PROFILE_0
 		cbnt.Meta.MSR = CBNT_PROCESSOR_FLAGS
-		cbnt.Meta.ForceBit = true
-
-		return &cbnt, nil
 	}
 
-	return nil, nil
+	return cbnt, nil
 }
 
-// If Secure Boot is eabled, create a "HardwareFeature" pointer/structure.  Otherwise,
-// return nil (.e. SUEFI is not enabled).
-func GetSUEFIHardwareFeature() (*HardwareFeature, error) {
+// If the current boot is in UEFI mode and Secure Boot is eabled, create a valid "UEFI" structure with "SecureBootEnabled" meta section.
+// Otherwise, return empty structure (i.e. Current boot is not UEFI and secure boot is not enabled).
+func GetUEFIHardwareFeature() (UEFI, error) {
+
+	var uefi UEFI
+	//Checking the presence of efi directory to make sure the current boot is in UEFI mode.
+	//In case of legacy mode this directory wont be available.
+	if _, err := os.Stat("/sys/firmware/efi"); os.IsNotExist(err) {
+		return uefi, nil
+	} else {
+		uefi.HardwareFeature.Enabled = true
+	}
 
 	// call 'bootctl status'. Ignore errors because 'bootctl' can return '1'
 	// even when valid output is present onstdout.  Just see if stdout contains
@@ -503,10 +510,8 @@ func GetSUEFIHardwareFeature() (*HardwareFeature, error) {
 	cmd := exec.Command(suefiBootCtlCmd[0], suefiBootCtlCmd[1])
 	stdout, _ := cmd.Output()
 	if strings.Contains(string(stdout), SECURE_BOOT_ENABLED) {
-		suefi := HardwareFeature{}
-		suefi.Enabled = true
-		return &suefi, nil
+		uefi.Meta.SecureBootEnabled = true
 	}
 
-	return nil, nil
+	return uefi, nil
 }
