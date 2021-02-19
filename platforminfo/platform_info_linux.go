@@ -473,19 +473,32 @@ func GetCBNTHardwareFeature() (CBNT, error) {
 
 	// check if CBNT is enabled
 	// similar to 'rdmsr -f 32:32 0x13A
-	cbntEnabled, err := GetBits(cbntBits, 32, 32)
+	cbntSupported, err := GetBits(cbntBits, 32, 32)
 	if err != nil {
 		return cbnt, err
 	}
 
 	// CBNT is enabled, create a CBNT structure and populate it.
-	if cbntEnabled == 1 {
-		cbnt.Meta.Profile, err = GetCBNTProfile(cbntBits)
+	if cbntSupported == 1 {
+		cbnt.HardwareFeature.Supported = true
+		bitsVMF, err := GetBits(cbntBits, 7, 4)
 		if err != nil {
 			return cbnt, err
 		}
-		cbnt.Enabled = cbnt.Meta.Profile != CBNT_PROFILE_0
-		cbnt.Meta.MSR = CBNT_PROCESSOR_FLAGS
+
+		bitBTGEnabled, err := GetBits(cbntBits, 0, 0)
+		if err != nil {
+			return cbnt, err
+		}
+
+		if bitsVMF != 0 || bitBTGEnabled != 0 {
+			cbnt.Meta.Profile, err = GetCBNTProfile(cbntBits)
+			if err != nil {
+				return cbnt, err
+			}
+			cbnt.Enabled = cbnt.Meta.Profile != CBNT_PROFILE_0
+			cbnt.Meta.MSR = CBNT_PROCESSOR_FLAGS
+		}
 	}
 
 	return cbnt, nil
@@ -502,6 +515,7 @@ func GetUEFIHardwareFeature() (UEFI, error) {
 		return uefi, nil
 	} else {
 		uefi.HardwareFeature.Enabled = true
+		uefi.HardwareFeature.Supported = true
 	}
 
 	// call 'bootctl status'. Ignore errors because 'bootctl' can return '1'
