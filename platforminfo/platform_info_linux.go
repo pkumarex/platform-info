@@ -481,11 +481,15 @@ func GetCBNTHardwareFeature() (CBNT, error) {
 	// CBNT is supported, create a CBNT structure and populate it.
 	if cbntSupported == 1 {
 		cbnt.HardwareFeature.Supported = true
+
+		// Verify if cbnt is enabled
+		// MSR[7:4] denotes the value of (Verify/Measure/FACB)
 		bitsVMF, err := GetBits(cbntBits, 7, 4)
 		if err != nil {
 			return cbnt, err
 		}
 
+		// MSR[0] denotes the value of (BTG enabled and passed startup ACM)
 		bitBTGEnabled, err := GetBits(cbntBits, 0, 0)
 		if err != nil {
 			return cbnt, err
