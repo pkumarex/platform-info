@@ -112,7 +112,8 @@ const (
 //
 
 type HardwareFeature struct {
-	Enabled bool `json:"enabled,string"`
+	Supported bool `json:"supported,string"`
+	Enabled   bool `json:"enabled,string"`
 }
 
 type CBNT struct {
@@ -195,7 +196,9 @@ func GetPlatformInfo() (*PlatformInfo, error) {
 	platformInfo.TbootInstalled, _ = TbootInstalled()
 	platformInfo.IsDockerEnvironment = fileExists("/.dockerenv")
 	platformInfo.HardwareFeatures.TXT.Enabled = platformInfo.TXTEnabled
+	platformInfo.HardwareFeatures.TXT.Supported = platformInfo.TXTEnabled
 	platformInfo.HardwareFeatures.TPM.Enabled = platformInfo.TPMEnabled
+	platformInfo.HardwareFeatures.TPM.Supported = platformInfo.TPMEnabled
 	platformInfo.HardwareFeatures.TPM.Meta.TPMVersion = platformInfo.TPMVersion
 	platformInfo.HardwareFeatures.TPM.Meta.PCRBanks = strings.Join(platformInfo.PCRBanks, "_")
 	platformInfo.InstalledComponents = []string{"tagent"}
